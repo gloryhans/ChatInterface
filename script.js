@@ -1,3 +1,10 @@
+const channels = document.querySelectorAll('.channel');
+const chatHeader = document.querySelector('#channel-title');
+const chatContainer = document.querySelector('#chat-messages');
+const template = document.querySelector('template');
+const messageInput = document.querySelector('#message-input');
+const sendButton = document.querySelector('#chat-form button');
+
 // Star Wars–themed chat data
 const chatData = {
   general: [
@@ -59,3 +66,51 @@ const chatData = {
     },
   ],
 };
+
+function populateMessages(channel) {
+  chatContainer.innerHTML = ''; // clear old messages
+  const messages = chatData[channel] || [];
+
+  messages.forEach(msg => {
+    const messageEl = template.content.cloneNode(true);
+    const div = messageEl.querySelector('.message');
+    div.querySelector('.sender').textContent = msg.sender + ':';
+    div.querySelector('.text').textContent = msg.text;
+
+    if (msg.fromSelf) div.classList.add('self'); // style user messages
+
+    chatContainer.appendChild(messageEl);
+  });
+}
+
+function changeChannel(e) {
+  channels.forEach(c => c.classList.remove('active'));
+  const clicked = e.currentTarget;
+  clicked.classList.add('active');
+
+  const channelName = clicked.dataset.channel;
+  chatHeader.textContent = clicked.textContent;
+  populateMessages(channelName);
+}
+
+function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text) return;
+
+  const activeChannel = document.querySelector('.channel.active');
+  const channelName = activeChannel.dataset.channel;
+
+  // Add message to chatData
+  chatData[channelName].push({ sender: 'You', text, fromSelf: true });
+
+  // Update messages
+  populateMessages(channelName);
+  messageInput.value = '';
+}
+
+// Event listeners
+channels.forEach(c => c.addEventListener('click', changeChannel));
+sendButton.addEventListener('click', sendMessage);
+
+// Load first channel messages on page load
+if (channels.length) channels[0].click();
